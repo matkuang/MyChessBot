@@ -5,6 +5,9 @@ def array_index_to_square(index: tuple):
 
 
 def square_to_array_index(square: int):
+    """Returns the two indices (row, column) that represent the location of a square in the 2d array board
+    representation.
+    """
     return abs((square - 56) // 8), square % 8
 
 

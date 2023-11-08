@@ -3,6 +3,7 @@ from board.GameState import GameState
 import assets
 from board.Move import Move
 from board.GenerateMove import get_valid_moves
+from board.SquareBoard import array_index_to_square
 
 colours = [(242, 226, 208), (140, 112, 95)]
 board_width = board_height = 800
@@ -37,8 +38,9 @@ def draw_pieces(screen: pg.Surface, board: list[list]):
 
 def get_target_square(screen: pg.Surface, selected_piece: tuple):
     if selected_piece is not None:
-        draw_dragging(screen, selected_piece)
-        return int(pg.mouse.get_pos()[0] // cell_width), int(pg.mouse.get_pos()[1] // cell_width)
+        if selected_piece[0] != "--":
+            draw_dragging(screen, selected_piece)
+            return int(pg.mouse.get_pos()[0] // cell_width), int(pg.mouse.get_pos()[1] // cell_width)
 
 
 def draw_dragging(screen, selected_piece):
@@ -52,11 +54,16 @@ def draw_dragging(screen, selected_piece):
 
 def get_square_under_mouse(board: list[list]) -> tuple:
     location = pg.mouse.get_pos()
+
     file = location[0] // cell_width
     rank = location[1] // cell_width
     piece = board[rank][file]
 
     return piece, file, rank
+
+
+def in_bounds(coordinates: tuple):
+    return (board_width > coordinates[0] > 0) and (board_height > coordinates[1] > 0)
 
 
 if __name__ == '__main__':
@@ -75,25 +82,26 @@ if __name__ == '__main__':
 
     running = True
     while running:
-        piece, file, rank = get_square_under_mouse(gamestate.board)
+        if in_bounds(pg.mouse.get_pos()):
+            piece, file, rank = get_square_under_mouse(gamestate.board)
 
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
             if event.type == pg.MOUSEBUTTONDOWN:
-                if piece != "--":
+                if piece != "--" and in_bounds(pg.mouse.get_pos()):
                     selected_piece = get_square_under_mouse(gamestate.board)
             if event.type == pg.MOUSEBUTTONUP:
-                if drop_position is not None:
-                    start_file = selected_piece[1]
-                    start_rank = selected_piece[2]
-                    target_file = drop_position[0]
-                    target_rank = drop_position[1]
+                if drop_position is not None and in_bounds(pg.mouse.get_pos()):
+                    start_square = array_index_to_square((selected_piece[2], selected_piece[1]))
+                    target_square = array_index_to_square((drop_position[1], drop_position[0]))
+                    piece_moved = selected_piece[0]
+                    piece_captured = gamestate.piece_on_square(target_square)
 
-                    move = Move((start_rank, start_file),
-                                (target_rank, target_file),
-                                selected_piece[0],
-                                gamestate.board[target_rank][target_file])
+                    move = Move(start_square,
+                                target_square,
+                                piece_moved,
+                                piece_captured)
                     if move in valid_moves:
                         gamestate.make_move(move)
                         move_made = True

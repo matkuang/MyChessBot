@@ -1,14 +1,9 @@
-from board.SquareBoard import array_index_to_square
+from board.SquareBoard import array_index_to_square, square_to_array_index
 
 
 class Move:
     start_square: int
-    start_row: int
-    start_col: int
     target_square: int
-    target_row: int
-    target_col: int
-
     piece_moved: str
     piece_captured: str
 
@@ -27,15 +22,26 @@ class Move:
                      8: "a2", 9: "b2", 10: "c2", 11: "d2", 12: "e2", 13: "f2", 14: "g2", 15: "h2",
                      0: "a1", 1: "b1", 2: "c1", 3: "d1", 4: "e1", 5: "f1", 6: "g1", 7: "h1"}
 
-    def __init__(self, start_index: tuple, target_index: tuple, piece_moved: str, piece_captured: str):
-        self.start_square = array_index_to_square(start_index)
-        self.start_row = start_index[0]
-        self.start_col = start_index[1]
-        self.target_square = array_index_to_square(target_index)
-        self.target_row = target_index[0]
-        self.target_col = target_index[1]
+    def __init__(self, start_square: int, target_square: int, piece_moved: str, piece_captured: str):
+        self.start_square = start_square
+        self.target_square = target_square
         self.piece_moved = piece_moved
         self.piece_captured = piece_captured
 
-    def getChessMove(self):
+    def __str__(self):
+        return self.get_chess_move()
+
+    def get_chess_move(self):
         return self.int_to_square[self.start_square] + self.int_to_square[self.target_square]
+
+    def get_move_start_row(self):
+        return square_to_array_index(self.start_square)[0]
+
+    def get_move_start_col(self):
+        return square_to_array_index(self.start_square)[1]
+
+    def get_move_target_row(self):
+        return square_to_array_index(self.target_square)[0]
+
+    def get_move_target_col(self):
+        return square_to_array_index(self.target_square)[1]
