@@ -1,4 +1,5 @@
 from board.GameState import GameState
+from board.Move import Move
 direction_offset = {8, -8, -1, 1, 7, -7, 9, -9}
 
 

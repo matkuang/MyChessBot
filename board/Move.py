@@ -31,6 +31,13 @@ class Move:
     def __str__(self):
         return self.get_chess_move()
 
+    def __eq__(self, other):
+        if isinstance(other, Move):
+            return (other.start_square == self.start_square and
+                    other.target_square == self.target_square and
+                    other.piece_moved == self.piece_moved and
+                    other.piece_captured == self.piece_captured)
+
     def get_chess_move(self):
         return self.int_to_square[self.start_square] + self.int_to_square[self.target_square]
 
