@@ -1,8 +1,7 @@
-import time
-
 import pygame as pg
 from board.GameState import GameState
 import assets
+from board.Move import Move
 
 colours = [(242, 226, 208), (140, 112, 95)]
 board_width = board_height = 800
@@ -64,6 +63,7 @@ if __name__ == '__main__':
     loadImages()
     clock = pg.time.Clock()
     gamestate = GameState()
+
     selected_piece = None
     drop_position = None
 
@@ -78,10 +78,17 @@ if __name__ == '__main__':
                     selected_piece = getSquareUnderMouse(gamestate.board)
             if event.type == pg.MOUSEBUTTONUP:
                 if drop_position is not None:
-                    piece, old_file, old_rank = selected_piece
-                    gamestate.board[old_rank][old_file] = "--"
-                    new_file, new_rank = drop_position
-                    gamestate.board[new_rank][new_file] = piece
+                    start_file = selected_piece[1]
+                    start_rank = selected_piece[2]
+                    target_file = drop_position[0]
+                    target_rank = drop_position[1]
+
+                    move = Move((start_rank, start_file),
+                                (target_rank, target_file),
+                                selected_piece[0],
+                                gamestate.board[target_file][target_rank])
+                    gamestate.makeMove(move)
+
                 selected_piece = None
                 drop_position = None
 
@@ -90,5 +97,5 @@ if __name__ == '__main__':
         drawPieces(screen, gamestate.board)
         drop_position = drawDrag(screen, selected_piece)
 
-        clock.tick(60)
+        clock.tick(120)
         pg.display.flip()
