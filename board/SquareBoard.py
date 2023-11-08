@@ -3,6 +3,7 @@
 def array_index_to_square(index: tuple):
     return abs(56 - index[0] * 8 + index[1])
 
+
 def square_to_array_index(square: int):
     return abs((square - 56) // 8), square % 8
 
