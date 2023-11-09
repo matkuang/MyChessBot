@@ -1,12 +1,12 @@
 from board.Move import Move
 from board.BoardUtility import array_index_to_square, square_to_array_index
-
+from board.BoardUtility import WHITE, BLACK, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, EMPTY
 
 class GameState:
     board: list[list[str]]
     moves: list[Move]
     move_made: bool
-    white_to_move: bool
+    colour_to_move: str
 
     def __init__(self):
         self.board = [
@@ -21,7 +21,7 @@ class GameState:
         ]
         self.moves = []
         self.move_made = False
-        self.white_to_move = True
+        self.colour_to_move = WHITE
 
     def get_piece_on_square(self, number: int) -> str:
         index = square_to_array_index(number)
@@ -33,7 +33,7 @@ class GameState:
         target_row = move.get_move_target_row()
         target_col = move.get_move_target_col()
 
-        self.board[start_row][start_col] = "--"
+        self.board[start_row][start_col] = EMPTY
         self.board[target_row][target_col] = move.piece_moved
         self.moves.append(move)
 
@@ -53,7 +53,11 @@ class GameState:
             self.white_to_move = not self.white_to_move
 
     def switch_turn(self):
-        self.white_to_move = not self.white_to_move
+        if self.colour_to_move == WHITE:
+            self.colour_to_move = BLACK
+        else:  # self.colour_to_move == BLACK
+            self.colour_to_move = WHITE
+
 
 if __name__ == '__main__':
     gs = GameState()

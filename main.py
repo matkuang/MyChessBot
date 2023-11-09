@@ -4,6 +4,7 @@ import assets
 from board.Move import Move
 from board.GenerateMove import get_valid_moves
 from board.BoardUtility import array_index_to_square
+from board.BoardUtility import WHITE, BLACK, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, EMPTY
 
 colours = [(242, 226, 208), (140, 112, 95)]
 board_width = board_height = 800
@@ -31,14 +32,14 @@ def draw_pieces(screen: pg.Surface, board: list[list]):
     for rank in range(8):
         for file in range(8):
             piece = board[rank][file]
-            if piece != "--":
+            if piece != EMPTY:
                 coordinates = (file * cell_width, rank * cell_width)
                 screen.blit(images[piece], pg.Rect(coordinates, cell_dimensions))
 
 
 def get_target_square(screen: pg.Surface, selected_piece: tuple):
     if selected_piece is not None:
-        if selected_piece[0] != "--":
+        if selected_piece[0] != EMPTY:
             draw_dragging(screen, selected_piece)
             return int(pg.mouse.get_pos()[0] // cell_width), int(pg.mouse.get_pos()[1] // cell_width)
 
@@ -77,7 +78,7 @@ if __name__ == '__main__':
     selected_piece = None
     drop_position = None
 
-    valid_moves = get_valid_moves(gamestate, gamestate.white_to_move)
+    valid_moves = get_valid_moves(gamestate, gamestate.colour_to_move)
 
     running = True
     while running:
@@ -91,7 +92,7 @@ if __name__ == '__main__':
                 running = False
 
             if event.type == pg.MOUSEBUTTONDOWN:
-                if piece != "--" and in_bounds(pg.mouse.get_pos()):
+                if piece != EMPTY and in_bounds(pg.mouse.get_pos()):
                     selected_piece = get_square_under_mouse(gamestate.board)
 
             if event.type == pg.MOUSEBUTTONUP:
@@ -119,7 +120,7 @@ if __name__ == '__main__':
         if gamestate.move_made:
             gamestate.move_made = False
             gamestate.switch_turn()
-            valid_moves = get_valid_moves(gamestate, gamestate.white_to_move)
+            valid_moves = get_valid_moves(gamestate, gamestate.colour_to_move)
 
 
         draw_board(screen)

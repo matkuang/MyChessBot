@@ -1,4 +1,11 @@
 
+WHITE, BLACK = "w", "b"
+PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, EMPTY = "P", "N", "B", "R", "Q", "K", "--"
+
+DIRECTION_OFFSETS = (8, -8, -1, 1, 7, -7, 9, -9)  # N S W E NW SE NE SW
+
+SLIDING_PIECES = {BISHOP, ROOK, QUEEN}
+
 num_squares_to_edge = []
 
 for row in range(8):
