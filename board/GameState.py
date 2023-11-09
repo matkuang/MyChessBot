@@ -37,7 +37,6 @@ class GameState:
         self.board[target_row][target_col] = move.piece_moved
         self.moves.append(move)
 
-
     def unmake_move(self) -> None:
         if len(self.moves) > 0:
             move = self.moves.pop()
@@ -50,7 +49,7 @@ class GameState:
             self.board[start_row][start_col] = move.piece_moved
             self.board[target_row][target_col] = move.piece_captured
 
-            self.white_to_move = not self.white_to_move
+            self.switch_turn()
 
     def switch_turn(self):
         if self.colour_to_move == WHITE:

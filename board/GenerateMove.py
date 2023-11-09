@@ -5,25 +5,26 @@ from board.BoardUtility import WHITE, BLACK, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, 
 from board.BoardUtility import SLIDING_PIECES
 from board.BoardUtility import DIRECTION_OFFSETS
 
-def get_valid_moves(gamestate, white_to_move) -> list[Move]:
-    return get_all_moves(gamestate, white_to_move)
+
+def get_valid_moves(gamestate, colour_to_move) -> list[Move]:
+    return get_all_moves(gamestate, colour_to_move)
 
 
 def get_all_moves(gamestate: GameState, colour_to_move: str) -> list[Move]:
     moves = []
     for square in range(64):
-        piece = gamestate.get_piece_on_square(square)
-        colour = piece[0]
+        piece = gamestate.get_piece_on_square(square)[1]
+        colour = gamestate.get_piece_on_square(square)[0]
         if colour == colour_to_move:
-            if piece[1] == PAWN:
+            if piece == PAWN:
                 moves.extend(get_pawn_moves(colour, square, gamestate))
-            elif piece[1] == KNIGHT:
+            elif piece == KNIGHT:
                 get_knight_moves()
 
-            elif piece[1] in SLIDING_PIECES:
-                get_sliding_moves()
+            elif piece in SLIDING_PIECES:
+                moves.extend(get_sliding_moves(colour, square, gamestate))
 
-            elif piece[1] == KING:
+            elif piece == KING:
                 get_king_moves()
 
     return moves
@@ -90,8 +91,32 @@ def get_knight_moves():
     pass
 
 
-def get_sliding_moves():
-    pass
+def get_sliding_moves(colour: str, square: int, gamestate: GameState):
+    piece_moved = gamestate.get_piece_on_square(square)
+    moves = []
+
+    if piece_moved[1] == BISHOP:
+        indices = range(4, 8)
+    elif piece_moved[1] == ROOK:
+        indices = range(0, 4)
+    else:  # piece_moved == QUEEN:
+        indices = range(0, 8)
+
+    for direction_index in indices:
+        for num in range(0, num_squares_to_edge[square][direction_index]):
+            next_square = square + (num + 1) * DIRECTION_OFFSETS[direction_index]
+            piece_on_next_square = gamestate.get_piece_on_square(next_square)
+
+            if square_has_enemy(colour, next_square, gamestate):
+                moves.append(Move(square, next_square, piece_moved, piece_on_next_square))
+                break
+
+            if square_has_friendly(colour, next_square, gamestate):
+                break
+
+            moves.append(Move(square, next_square, piece_moved, piece_on_next_square))
+
+    return moves
 
 
 def get_king_moves():
@@ -99,4 +124,4 @@ def get_king_moves():
 
 
 if __name__ == '__main__':
-    print(num_squares_to_edge)
+    pass

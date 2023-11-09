@@ -83,17 +83,16 @@ if __name__ == '__main__':
     running = True
     while running:
 
-        if in_bounds(pg.mouse.get_pos()):
-            piece, file, rank = get_square_under_mouse(gamestate.board)
-
         for event in pg.event.get():
 
             if event.type == pg.QUIT:
                 running = False
 
             if event.type == pg.MOUSEBUTTONDOWN:
-                if piece != EMPTY and in_bounds(pg.mouse.get_pos()):
-                    selected_piece = get_square_under_mouse(gamestate.board)
+                if in_bounds(pg.mouse.get_pos()):
+                    piece, file, rank = get_square_under_mouse(gamestate.board)
+                    if piece != EMPTY and in_bounds(pg.mouse.get_pos()):
+                        selected_piece = get_square_under_mouse(gamestate.board)
 
             if event.type == pg.MOUSEBUTTONUP:
                 if drop_position is not None and in_bounds(pg.mouse.get_pos()):
@@ -116,12 +115,12 @@ if __name__ == '__main__':
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_z:
                     gamestate.unmake_move()
+                    valid_moves = get_valid_moves(gamestate, gamestate.colour_to_move)
 
         if gamestate.move_made:
             gamestate.move_made = False
             gamestate.switch_turn()
             valid_moves = get_valid_moves(gamestate, gamestate.colour_to_move)
-
 
         draw_board(screen)
         draw_pieces(screen, gamestate.board)
