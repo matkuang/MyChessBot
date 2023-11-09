@@ -19,13 +19,13 @@ def get_all_moves(gamestate: GameState, colour_to_move: str) -> list[Move]:
             if piece == PAWN:
                 moves.extend(get_pawn_moves(colour, square, gamestate))
             elif piece == KNIGHT:
-                get_knight_moves()
+                get_knight_moves(colour, square, gamestate)
 
             elif piece in SLIDING_PIECES:
                 moves.extend(get_sliding_moves(colour, square, gamestate))
 
             elif piece == KING:
-                get_king_moves()
+                get_king_moves(colour, square, gamestate)
 
     return moves
 
@@ -87,8 +87,8 @@ def get_pawn_moves(colour:str, square: int, gamestate: GameState) -> list[Move]:
     return moves
 
 
-def get_knight_moves():
-    pass
+def get_knight_moves(colour: str, square: int, gamestate: GameState):
+    return []
 
 
 def get_sliding_moves(colour: str, square: int, gamestate: GameState):
@@ -119,8 +119,35 @@ def get_sliding_moves(colour: str, square: int, gamestate: GameState):
     return moves
 
 
-def get_king_moves():
-    pass
+def get_king_moves(colour: str, square: int, gamestate: GameState):
+    return []
+
+
+def get_possible_squares_for_piece(piece: str, colour: str, square: int, gamestate: GameState):
+    possible_squares = []
+    if piece == PAWN:
+        possible_moves = get_pawn_moves(colour, square, gamestate)
+        for move in possible_moves:
+            possible_squares.append(move.target_square)
+        return possible_squares
+
+    elif piece == KNIGHT:
+        possible_moves = get_knight_moves(colour, square, gamestate)
+        for move in possible_moves:
+            possible_squares.append(move.target_square)
+        return possible_squares
+
+    elif piece in SLIDING_PIECES:
+        possible_moves = get_sliding_moves(colour, square, gamestate)
+        for move in possible_moves:
+            possible_squares.append(move.target_square)
+        return possible_squares
+
+    elif piece == KING:
+        possible_moves = get_king_moves(colour, square, gamestate)
+        for move in possible_moves:
+            possible_squares.append(move.target_square)
+        return possible_squares
 
 
 if __name__ == '__main__':

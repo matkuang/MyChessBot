@@ -2,11 +2,13 @@ import pygame as pg
 from board.GameState import GameState
 import assets
 from board.Move import Move
-from board.GenerateMove import get_valid_moves
-from board.BoardUtility import array_index_to_square
+from board.GenerateMove import get_valid_moves, get_possible_squares_for_piece
+from board.BoardUtility import array_index_to_square, square_to_array_index
 from board.BoardUtility import WHITE, BLACK, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, EMPTY
 
 colours = [(242, 226, 208), (140, 112, 95)]
+highlight_colours = [(232, 128, 138), (230, 101, 113)]  # light, dark
+
 board_width = board_height = 800
 cell_width = cell_height = board_width // 8
 cell_dimensions = (cell_width, cell_width)
@@ -20,12 +22,23 @@ def load_images():
         images[piece] = pg.transform.smoothscale(pg.image.load(f"assets/{piece}.png"), (100, 100))
 
 
-def draw_board(screen: pg.Surface):
+def draw_board(screen: pg.Surface, selected_piece: tuple):
     for file in range(8):
         for rank in range(8):
             colour = colours[(file + rank) % 2]
             coordinates = (rank * cell_width, file * cell_width)
             pg.draw.rect(screen, colour, pg.Rect(coordinates, cell_dimensions))
+
+    if selected_piece is not None:
+        start_square = array_index_to_square((selected_piece[2], selected_piece[1]))
+        piece_type = selected_piece[0][1]
+        piece_colour = selected_piece[0][0]
+        possible_squares = get_possible_squares_for_piece(piece_type, piece_colour, start_square, gamestate)
+
+        for square in possible_squares:
+            array_index = square_to_array_index(square)
+            highlight_colour = highlight_colours[(array_index[0] + array_index[1]) % 2]
+            highlight_square(screen, square, gamestate.get_piece_on_square(square), highlight_colour)
 
 
 def draw_pieces(screen: pg.Surface, board: list[list]):
@@ -41,15 +54,18 @@ def get_target_square(screen: pg.Surface, selected_piece: tuple):
     if selected_piece is not None:
         if selected_piece[0] != EMPTY:
             draw_dragging(screen, selected_piece)
-            return int(pg.mouse.get_pos()[0] // cell_width), int(pg.mouse.get_pos()[1] // cell_width)
+            return int(pg.mouse.get_pos()[0] // cell_width), int(pg.mouse.get_pos()[1] // cell_height)
 
 
 def draw_dragging(screen, selected_piece):
     piece, file, rank = selected_piece
     colour = colours[(file + rank) % 2]
-    selected_piece_coordinates = (file * cell_width, rank * cell_width)
+    highlight_colour = (227, 61, 77)
+    selected_piece_coordinates = (file * cell_width, rank * cell_height)
     pg.draw.rect(screen, colour, pg.Rect(selected_piece_coordinates, cell_dimensions))
-    mouse_coordinates = (pg.mouse.get_pos()[0] - (cell_width / 2), pg.mouse.get_pos()[1] - (cell_width / 2))
+    selected_square = array_index_to_square((selected_piece[2], selected_piece[1]))
+    highlight_square(screen, selected_square, "--", highlight_colour)
+    mouse_coordinates = (pg.mouse.get_pos()[0] - (cell_width / 2), pg.mouse.get_pos()[1] - (cell_height / 2))
     screen.blit(images[piece], mouse_coordinates)
 
 
@@ -65,6 +81,14 @@ def get_square_under_mouse(board: list[list]) -> tuple:
 
 def in_bounds(coordinates: tuple):
     return (board_width > coordinates[0] > 0) and (board_height > coordinates[1] > 0)
+
+
+def highlight_square(screen: pg.Surface, square: int, piece: str, highlight_colour: tuple):
+    array_index = square_to_array_index(square)
+    square_coordinates = (array_index[1] * cell_width, array_index[0] * cell_height)
+    pg.draw.rect(screen, highlight_colour, pg.Rect(square_coordinates, cell_dimensions))
+    if piece != "--":
+        screen.blit(images[piece], square_coordinates)
 
 
 if __name__ == '__main__':
@@ -122,7 +146,7 @@ if __name__ == '__main__':
             gamestate.switch_turn()
             valid_moves = get_valid_moves(gamestate, gamestate.colour_to_move)
 
-        draw_board(screen)
+        draw_board(screen, selected_piece)
         draw_pieces(screen, gamestate.board)
         drop_position = get_target_square(screen, selected_piece)
 
