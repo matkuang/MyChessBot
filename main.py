@@ -3,7 +3,7 @@ from board.GameState import GameState
 import assets
 from board.Move import Move
 from board.GenerateMove import get_valid_moves
-from board.SquareBoard import array_index_to_square
+from board.BoardUtility import array_index_to_square
 
 colours = [(242, 226, 208), (140, 112, 95)]
 board_width = board_height = 800
@@ -78,25 +78,28 @@ if __name__ == '__main__':
     drop_position = None
 
     valid_moves = get_valid_moves(gamestate, gamestate.white_to_move)
-    move_made = False
 
     running = True
     while running:
+
         if in_bounds(pg.mouse.get_pos()):
             piece, file, rank = get_square_under_mouse(gamestate.board)
 
         for event in pg.event.get():
+
             if event.type == pg.QUIT:
                 running = False
+
             if event.type == pg.MOUSEBUTTONDOWN:
                 if piece != "--" and in_bounds(pg.mouse.get_pos()):
                     selected_piece = get_square_under_mouse(gamestate.board)
+
             if event.type == pg.MOUSEBUTTONUP:
                 if drop_position is not None and in_bounds(pg.mouse.get_pos()):
                     start_square = array_index_to_square((selected_piece[2], selected_piece[1]))
                     target_square = array_index_to_square((drop_position[1], drop_position[0]))
                     piece_moved = selected_piece[0]
-                    piece_captured = gamestate.piece_on_square(target_square)
+                    piece_captured = gamestate.get_piece_on_square(target_square)
 
                     move = Move(start_square,
                                 target_square,
@@ -104,7 +107,7 @@ if __name__ == '__main__':
                                 piece_captured)
                     if move in valid_moves:
                         gamestate.make_move(move)
-                        move_made = True
+                        gamestate.move_made = True
 
                 selected_piece = None
                 drop_position = None
@@ -113,8 +116,11 @@ if __name__ == '__main__':
                 if event.key == pg.K_z:
                     gamestate.unmake_move()
 
-        if move_made:
+        if gamestate.move_made:
+            gamestate.move_made = False
+            gamestate.switch_turn()
             valid_moves = get_valid_moves(gamestate, gamestate.white_to_move)
+
 
         draw_board(screen)
         draw_pieces(screen, gamestate.board)

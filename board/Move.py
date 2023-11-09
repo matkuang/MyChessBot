@@ -1,4 +1,4 @@
-from board.SquareBoard import array_index_to_square, square_to_array_index
+from board.BoardUtility import square_to_array_index
 
 
 class Move:
@@ -29,7 +29,7 @@ class Move:
         self.piece_captured = piece_captured
 
     def __str__(self):
-        return self.get_chess_move()
+        return self.get_chess_move_str()
 
     def __eq__(self, other):
         if isinstance(other, Move):
@@ -38,17 +38,17 @@ class Move:
                     other.piece_moved == self.piece_moved and
                     other.piece_captured == self.piece_captured)
 
-    def get_chess_move(self):
+    def get_chess_move_str(self) -> str:
         return self.int_to_square[self.start_square] + self.int_to_square[self.target_square]
 
-    def get_move_start_row(self):
+    def get_move_start_row(self) -> int:
         return square_to_array_index(self.start_square)[0]
 
-    def get_move_start_col(self):
+    def get_move_start_col(self) -> int:
         return square_to_array_index(self.start_square)[1]
 
-    def get_move_target_row(self):
+    def get_move_target_row(self) -> int:
         return square_to_array_index(self.target_square)[0]
 
-    def get_move_target_col(self):
+    def get_move_target_col(self) -> int:
         return square_to_array_index(self.target_square)[1]
