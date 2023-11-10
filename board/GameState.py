@@ -7,6 +7,8 @@ class GameState:
     moves: list[Move]
     move_made: bool
     colour_to_move: str
+    white_can_castle = (True, True)  # king-side, queen-side
+    black_can_castle = (True, True)
 
     def __init__(self):
         self.board = [

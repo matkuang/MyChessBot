@@ -4,7 +4,7 @@ from board.BoardUtility import num_squares_to_edge
 from board.BoardUtility import WHITE, BLACK, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, EMPTY
 from board.BoardUtility import SLIDING_PIECES
 from board.BoardUtility import DIRECTION_OFFSETS
-
+from board.BoardUtility import NORTH, SOUTH, WEST, EAST, NORTHWEST, SOUTHEAST, NORTHEAST, SOUTHWEST
 
 def get_valid_moves(gamestate, colour_to_move) -> list[Move]:
     return get_all_moves(gamestate, colour_to_move)
@@ -88,7 +88,6 @@ def get_pawn_moves(colour:str, square: int, gamestate: GameState) -> list[Move]:
 
 
 def get_knight_moves(colour: str, square: int, gamestate: GameState):
-    NORTH, SOUTH, WEST, EAST = 0, 1, 2, 3
     moves = []
 
     if num_squares_to_edge[square][NORTH] > 0 and num_squares_to_edge[square][WEST] > 1:  # WNW
@@ -126,7 +125,7 @@ def get_knight_moves(colour: str, square: int, gamestate: GameState):
     return moves
 
 
-def get_knight_moves_helper(colour: str, gamestate: GameState, square: int, target_square: int) -> tuple:
+def get_knight_moves_helper(colour: str, gamestate: GameState, square: int, target_square: int) -> tuple[Move]:
     piece_on_target_square = gamestate.get_piece_on_square(target_square)
 
     if square_has_enemy(colour, target_square, gamestate):
@@ -166,7 +165,23 @@ def get_sliding_moves(colour: str, square: int, gamestate: GameState):
 
 
 def get_king_moves(colour: str, square: int, gamestate: GameState):
-    return []
+    moves = []
+
+    for direction_index in range(0, 8):
+        if num_squares_to_edge[square][direction_index] > 0:
+            target_square = square + DIRECTION_OFFSETS[direction_index]
+            piece_on_target_square = gamestate.get_piece_on_square(target_square)
+
+            if square_has_enemy(colour, target_square, gamestate):
+                moves.append(Move(square, target_square, colour + KING, piece_on_target_square))
+                continue
+
+            if square_has_friendly(colour, target_square, gamestate):
+                continue
+
+            moves.append(Move(square, target_square, colour + KING, piece_on_target_square))
+
+    return moves
 
 
 def get_possible_squares_for_piece(piece: str, colour: str, square: int, gamestate: GameState):
@@ -194,6 +209,9 @@ def get_possible_squares_for_piece(piece: str, colour: str, square: int, gamesta
         for move in possible_moves:
             possible_squares.append(move.target_square)
         return possible_squares
+
+def generate_attack_map(colour: str, gamestate: GameState):
+    moves = get_all_moves()
 
 
 if __name__ == '__main__':
