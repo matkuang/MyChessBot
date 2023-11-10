@@ -19,13 +19,13 @@ def get_all_moves(gamestate: GameState, colour_to_move: str) -> list[Move]:
             if piece == PAWN:
                 moves.extend(get_pawn_moves(colour, square, gamestate))
             elif piece == KNIGHT:
-                get_knight_moves(colour, square, gamestate)
+                moves.extend(get_knight_moves(colour, square, gamestate))
 
             elif piece in SLIDING_PIECES:
                 moves.extend(get_sliding_moves(colour, square, gamestate))
 
             elif piece == KING:
-                get_king_moves(colour, square, gamestate)
+                moves.extend(get_king_moves(colour, square, gamestate))
 
     return moves
 
@@ -88,7 +88,53 @@ def get_pawn_moves(colour:str, square: int, gamestate: GameState) -> list[Move]:
 
 
 def get_knight_moves(colour: str, square: int, gamestate: GameState):
-    return []
+    NORTH, SOUTH, WEST, EAST = 0, 1, 2, 3
+    moves = []
+
+    if num_squares_to_edge[square][NORTH] > 0 and num_squares_to_edge[square][WEST] > 1:  # WNW
+        target_square = square + 6
+        moves.extend(get_knight_moves_helper(colour, gamestate, square, target_square))
+
+    if num_squares_to_edge[square][NORTH] > 1 and num_squares_to_edge[square][WEST] > 0:  # NNW
+        target_square = square + 15
+        moves.extend(get_knight_moves_helper(colour, gamestate, square, target_square))
+
+    if num_squares_to_edge[square][SOUTH] > 0 and num_squares_to_edge[square][EAST] > 1:  # ESE
+        target_square = square - 6
+        moves.extend(get_knight_moves_helper(colour, gamestate, square, target_square))
+
+    if num_squares_to_edge[square][SOUTH] > 1 and num_squares_to_edge[square][EAST] > 0:  # SSE
+        target_square = square - 15
+        moves.extend(get_knight_moves_helper(colour, gamestate, square, target_square))
+
+    if num_squares_to_edge[square][NORTH] > 0 and num_squares_to_edge[square][EAST] > 1:  # ENE
+        target_square = square + 10
+        moves.extend(get_knight_moves_helper(colour, gamestate, square, target_square))
+
+    if num_squares_to_edge[square][NORTH] > 1 and num_squares_to_edge[square][EAST] > 0:  # NNE
+        target_square = square + 17
+        moves.extend(get_knight_moves_helper(colour, gamestate, square, target_square))
+
+    if num_squares_to_edge[square][SOUTH] > 0 and num_squares_to_edge[square][WEST] > 1:  # WSW
+        target_square = square - 10
+        moves.extend(get_knight_moves_helper(colour, gamestate, square, target_square))
+
+    if num_squares_to_edge[square][SOUTH] > 1 and num_squares_to_edge[square][WEST] > 0:  # SSW
+        target_square = square - 17
+        moves.extend(get_knight_moves_helper(colour, gamestate, square, target_square))
+
+    return moves
+
+
+def get_knight_moves_helper(colour: str, gamestate: GameState, square: int, target_square: int) -> tuple:
+    piece_on_target_square = gamestate.get_piece_on_square(target_square)
+
+    if square_has_enemy(colour, target_square, gamestate):
+        return (Move(square, target_square, colour + KNIGHT, piece_on_target_square),)
+    if square_has_friendly(colour, target_square, gamestate):
+        return ()
+    else:
+        return (Move(square, target_square, colour + KNIGHT, gamestate.get_piece_on_square(target_square)),)
 
 
 def get_sliding_moves(colour: str, square: int, gamestate: GameState):

@@ -3,7 +3,7 @@ WHITE, BLACK = "w", "b"
 PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, EMPTY = "P", "N", "B", "R", "Q", "K", "--"
 
 DIRECTION_OFFSETS = (8, -8, -1, 1, 7, -7, 9, -9)  # N S W E NW SE NE SW
-
+KNIGHT_DIRECTION_OFFSETS = (6, 15, -6, -15, 10, 17, -10, -17)  # WNW NNW ESE SSE ENE NNE WSW SSW
 SLIDING_PIECES = {BISHOP, ROOK, QUEEN}
 
 num_squares_to_edge = []
@@ -17,14 +17,14 @@ for row in range(8):
 
         num_squares_to_edge.append(
             (
-                num_north,
-                num_south,
-                num_west,
-                num_east,
-                min(num_north, num_west),
-                min(num_south, num_east),
-                min(num_north, num_east),
-                min(num_south, num_west)
+                num_north,                 # 0
+                num_south,                 # 1
+                num_west,                  # 2
+                num_east,                  # 3
+                min(num_north, num_west),  # 4
+                min(num_south, num_east),  # 5
+                min(num_north, num_east),  # 6
+                min(num_south, num_west)   # 7
              )
         )
 
