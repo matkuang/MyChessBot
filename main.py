@@ -31,9 +31,8 @@ def draw_board(screen: pg.Surface, selected_piece: tuple):
 
     if selected_piece is not None:
         start_square = array_index_to_square((selected_piece[2], selected_piece[1]))
-        piece_type = selected_piece[0][1]
         piece_colour = selected_piece[0][0]
-        possible_squares = get_possible_squares_for_piece(piece_type, piece_colour, start_square, gamestate)
+        possible_squares = get_possible_squares_for_piece(piece_colour, start_square, gamestate)
 
         for square in possible_squares:
             array_index = square_to_array_index(square)
@@ -91,6 +90,10 @@ def highlight_square(screen: pg.Surface, square: int, piece: str, highlight_colo
         screen.blit(images[piece], square_coordinates)
 
 
+def draw_winning_screen(screen: pg.Surface, winning_colour: str):
+    pass
+
+
 if __name__ == '__main__':
 
     pg.init()
@@ -102,10 +105,14 @@ if __name__ == '__main__':
     selected_piece = None
     drop_position = None
 
-    valid_moves = get_valid_moves(gamestate, gamestate.colour_to_move)
+    valid_moves = get_valid_moves(gamestate.colour_to_move, gamestate)
 
     running = True
     while running:
+        # if valid_moves == []:
+        #     if gamestate.colour_to_move == WHITE and in_check(colour_to_move, gamestate):  # winner
+
+
 
         for event in pg.event.get():
 
@@ -132,6 +139,8 @@ if __name__ == '__main__':
                     if move in valid_moves:
                         gamestate.make_move(move)
                         gamestate.move_made = True
+                        if move.piece_moved[1] == KING:
+                            gamestate.update_king_location(move.piece_moved[0])
 
                 selected_piece = None
                 drop_position = None
@@ -139,12 +148,11 @@ if __name__ == '__main__':
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_z:
                     gamestate.unmake_move()
-                    valid_moves = get_valid_moves(gamestate, gamestate.colour_to_move)
+                    valid_moves = get_valid_moves(gamestate.colour_to_move, gamestate)
 
         if gamestate.move_made:
             gamestate.move_made = False
-            gamestate.switch_turn()
-            valid_moves = get_valid_moves(gamestate, gamestate.colour_to_move)
+            valid_moves = get_valid_moves(gamestate.colour_to_move, gamestate)
 
         draw_board(screen, selected_piece)
         draw_pieces(screen, gamestate.board)

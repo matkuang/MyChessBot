@@ -52,3 +52,11 @@ class Move:
 
     def get_move_target_col(self) -> int:
         return square_to_array_index(self.target_square)[1]
+
+
+class Castle(Move):
+    side_to_castle: str
+
+    def __init__(self, start_square: int, target_square: int, piece_moved: str, piece_captured: str, side_to_castle: str):
+        super().__init__(start_square, target_square, piece_moved, piece_captured)
+        self.side_to_castle = side_to_castle
