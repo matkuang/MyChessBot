@@ -119,7 +119,7 @@ if __name__ == '__main__':
     load_images()
     clock = pg.time.Clock()
     game_history = GameHistory()
-    gamestate = GameState('2kr2nr/1pbb1ppp/8/pB2N3/2Q1P3/4B3/PPP2PPP/RN2K2R b KQ - 0 1', game_history)
+    gamestate = GameState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", game_history)
 
     selected_piece = None
     drop_position = None
@@ -146,9 +146,9 @@ if __name__ == '__main__':
 
             if gamestate.colour_to_move == WHITE:
                 if in_check(WHITE, gamestate):  # black wins by checkmate
-                    draw_end_screen(screen, BLACK)
+                    draw_end_screen(screen, BLACK, gamestate)
                 else:
-                    draw_end_screen(screen, None)  # draw by stalemate
+                    draw_end_screen(screen, None, gamestate)  # draw by stalemate
 
             pg.display.flip()
 

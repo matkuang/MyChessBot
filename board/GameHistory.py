@@ -6,7 +6,7 @@ class GameHistory:
     moves: list[Move]
 
     def __init__(self):
-        self.gamestates = ["rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", '2kr2nr/1pbb1ppp/8/pB2N3/2Q1P3/4B3/PPP2PPP/RN2K2R b KQ - 0 1']
+        self.gamestates = ["rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]
         self.moves = []
 
     def get_last_gamestate(self) -> str:
