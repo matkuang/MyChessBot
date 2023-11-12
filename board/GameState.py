@@ -161,14 +161,18 @@ class GameState:
 
         if piece_type == PAWN:
             if abs(move.start_square - move.target_square) == 16:
-                self.set_en_passant_square(move.start_square, move.target_square)
+                self.en_passant_target_square = (move.start_square + move.target_square) // 2
             if isinstance(move, EnPassant):
                 if piece_colour == WHITE:
                     self.set_piece_on_square(self.en_passant_target_square - 8, EMPTY)
                 else:
                     self.set_piece_on_square(self.en_passant_target_square + 8, EMPTY)
+        else:
+            self.en_passant_target_square = None
 
         self.game_history.save_half_move(move)
+        self.change_half_move_clock(move)
+        self.change_full_move_number()
         self.switch_turn()
         self.game_history.save_gamestate(self.generate_fen())
 
@@ -207,8 +211,18 @@ class GameState:
     def get_colour_to_move(self):
         return self.colour_to_move
 
-    def set_en_passant_square(self, start_square: int, target_square: int):
-        self.en_passant_target_square = (start_square + target_square) // 2
+    def change_half_move_clock(self, move: Move):
+        if move.piece_captured != EMPTY or move.piece_moved[1] == PAWN:
+            self.half_move_clock = 0
+        else:
+            self.half_move_clock += 1
+
+    def change_full_move_number(self):
+        if self.colour_to_move == BLACK:
+            self.full_move_number += 1
+
+    def check_threefold_repetition(self):
+        pass
 
 
 if __name__ == '__main__':

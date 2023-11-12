@@ -3,10 +3,12 @@ from board.Move import Move
 
 class GameHistory:
     gamestates: list[str]
+    repetition_gamestates: list[str]
     moves: list[Move]
 
     def __init__(self):
         self.gamestates = ["rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]
+        self.repetition_gamestates = []
         self.moves = []
 
     def get_last_gamestate(self) -> str:
