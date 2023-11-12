@@ -58,32 +58,30 @@ class GameState:
         self.half_move_clock = int(fen_list[4])
         self.full_move_number = int(fen_list[5])
         board = []
-        white_king_tracker_row, white_king_tracker_col = -1, -1
-        black_king_tracker_row, black_king_tracker_col = -1, -1
+        row_counter = 0
         for row_string in board_fen_as_list:
             row = []
+            col_counter = 0
             for character in row_string:
+                if character == KING:
+                    self.white_king_square = array_index_to_square((row_counter, col_counter))
+                    print(self.white_king_square)
+                if character == KING.lower():
+                    self.black_king_square = array_index_to_square((row_counter, col_counter))
+                    print(self.black_king_square)
                 if character.isnumeric():
                     for num in range(int(character)):
                         row.append(EMPTY)
-                        white_king_tracker_col += 1
-                        black_king_tracker_col += 1
+                        col_counter += 1
                 else:
                     colour = colours[character.islower()]
                     row.append(colour + character.upper())
-                    white_king_tracker_col += 1
-                    black_king_tracker_col += 1
-
-                if character == KING.upper():
-                    self.white_king_square = array_index_to_square((white_king_tracker_row, white_king_tracker_col))
-                if character == KING.lower():
-                    self.black_king_square = array_index_to_square((black_king_tracker_row, black_king_tracker_col))
-
-                white_king_tracker_row += 1
-                black_king_tracker_row += 1
+                    col_counter += 1
+            row_counter += 1
 
             board.append(row)
         self.board = board
+
 
     def __str__(self):
         string = ""
