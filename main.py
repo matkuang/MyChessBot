@@ -1,5 +1,6 @@
 import pygame as pg
 from board.GameState import GameState
+from board.GameHistory import GameHistory
 import assets
 from board.Move import Move
 from board.GenerateMove import get_valid_moves, get_possible_squares_for_piece, in_check
@@ -43,13 +44,16 @@ def draw_board(screen: pg.Surface, selected_piece: tuple):
             highlight_square(screen, square, gamestate.get_piece_on_square(square), highlight_colour)
 
 
-def draw_pieces(screen: pg.Surface, board: list[list]):
-    for rank in range(8):
-        for file in range(8):
-            piece = board[rank][file]
+def draw_pieces(screen: pg.Surface, gamestate: GameState):
+    row_num = 0
+    for row in gamestate.board:
+        col_num = 0
+        for piece in row:
             if piece != EMPTY:
-                coordinates = (file * cell_width, rank * cell_width)
+                coordinates = (col_num * cell_width, row_num * cell_height)
                 screen.blit(images[piece], pg.Rect(coordinates, cell_dimensions))
+            col_num += 1
+        row_num += 1
 
 
 def get_target_square(screen: pg.Surface, selected_piece: tuple):
@@ -93,18 +97,18 @@ def highlight_square(screen: pg.Surface, square: int, piece: str, highlight_colo
         screen.blit(images[piece], square_coordinates)
 
 
-def draw_end_screen(screen: pg.Surface, winning_colour: str | None):
+def draw_end_screen(screen: pg.Surface, winning_colour: str | None, gamestate: GameState):
     if winning_colour == WHITE:
         draw_board(screen, selected_piece)
-        draw_pieces(screen, gamestate.board)
+        draw_pieces(screen, gamestate)
         screen.blit(images["WIN"], pg.Rect((200, 200), (400, 400)))
     elif winning_colour == BLACK:
         draw_board(screen, selected_piece)
-        draw_pieces(screen, gamestate.board)
+        draw_pieces(screen, gamestate)
         screen.blit(images["LOSE"], pg.Rect((200, 200), (400, 400)))
     else:
         draw_board(screen, selected_piece)
-        draw_pieces(screen, gamestate.board)
+        draw_pieces(screen, gamestate)
         screen.blit(images["DRAW"], pg.Rect((200, 200), (400, 400)))
 
 
@@ -114,19 +118,21 @@ if __name__ == '__main__':
     screen = pg.display.set_mode((board_width, board_height))
     load_images()
     clock = pg.time.Clock()
-    gamestate = GameState()
+    game_history = GameHistory()
+    gamestate = GameState('2kr2nr/1pbb1ppp/8/pB2N3/2Q1P3/4B3/PPP2PPP/RN2K2R b KQ - 0 1', game_history)
 
     selected_piece = None
     drop_position = None
 
     valid_moves = get_valid_moves(gamestate.colour_to_move, gamestate)
+    move_made = False
 
     running = True
     while running:
 
         if valid_moves == []:
             draw_board(screen, selected_piece)
-            draw_pieces(screen, gamestate.board)
+            draw_pieces(screen, gamestate)
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -134,9 +140,9 @@ if __name__ == '__main__':
 
             if gamestate.colour_to_move == BLACK:
                 if in_check(BLACK, gamestate):  # white wins by checkmate
-                    draw_end_screen(screen, WHITE)
+                    draw_end_screen(screen, WHITE, gamestate)
                 else:
-                    draw_end_screen(screen, None)  # draw by stalemate
+                    draw_end_screen(screen, None, gamestate)  # draw by stalemate
 
             if gamestate.colour_to_move == WHITE:
                 if in_check(WHITE, gamestate):  # black wins by checkmate
@@ -153,10 +159,11 @@ if __name__ == '__main__':
                     running = False
 
                 if event.type == pg.MOUSEBUTTONDOWN:
-                    if in_bounds(pg.mouse.get_pos()):
-                        piece, file, rank = get_square_under_mouse(gamestate.board)
-                        if piece != EMPTY and in_bounds(pg.mouse.get_pos()):
-                            selected_piece = get_square_under_mouse(gamestate.board)
+                    if selected_piece is None:
+                        if in_bounds(pg.mouse.get_pos()):
+                            piece, file, rank = get_square_under_mouse(gamestate.board)
+                            if piece != EMPTY and in_bounds(pg.mouse.get_pos()):
+                                selected_piece = get_square_under_mouse(gamestate.board)
 
                 if event.type == pg.MOUSEBUTTONUP:
                     if drop_position is not None and in_bounds(pg.mouse.get_pos()):
@@ -171,9 +178,9 @@ if __name__ == '__main__':
                                     piece_captured)
                         if move in valid_moves:
                             gamestate.make_move(move)
-                            gamestate.move_made = True
+                            move_made = True
                             if move.piece_moved[1] == KING:
-                                gamestate.update_king_location(move.piece_moved[0])
+                                gamestate.update_king_location(gamestate.get_colour_to_move())
 
                     selected_piece = None
                     drop_position = None
@@ -182,13 +189,15 @@ if __name__ == '__main__':
                     if event.key == pg.K_z:
                         gamestate.unmake_move()
                         valid_moves = get_valid_moves(gamestate.colour_to_move, gamestate)
+                    if event.key == pg.K_s:
+                        print(gamestate.generate_fen())
 
-            if gamestate.move_made:
-                gamestate.move_made = False
-                valid_moves = get_valid_moves(gamestate.colour_to_move, gamestate)
+                if move_made:
+                    move_made = False
+                    valid_moves = get_valid_moves(gamestate.colour_to_move, gamestate)
 
             draw_board(screen, selected_piece)
-            draw_pieces(screen, gamestate.board)
+            draw_pieces(screen, gamestate)
             drop_position = get_target_square(screen, selected_piece)
 
             clock.tick(120)

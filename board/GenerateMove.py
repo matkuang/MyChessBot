@@ -1,5 +1,5 @@
 from board.GameState import GameState
-from board.Move import Move
+from board.Move import Move, Castle
 from board.BoardUtility import num_squares_to_edge
 from board.BoardUtility import WHITE, BLACK, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, EMPTY
 from board.BoardUtility import SLIDING_PIECES
@@ -193,20 +193,64 @@ def get_king_moves(colour: str, square: int, gamestate: GameState) -> list[Move]
 
             moves.append(Move(square, target_square, colour + KING, piece_on_target_square))
 
-    # if colour == WHITE:
-    #     if not gamestate.white_can_castle[0]:
-    #         return moves
-    #     if not (gamestate.get_piece_on_square(5) == EMPTY and gamestate.get_piece_on_square(6) == EMPTY):
-    #         return moves
-    #     attacked_squares = generate_attack_map(BLACK, gamestate)
-    #     if square in attacked_squares or 5 in attacked_squares or 6 in attacked_squares:
-    #         return moves
-    #
-    #     moves.append()
-    #
-
+    if check_castle_conditions(colour, KING, gamestate):
+        moves.append(Castle(square, square + 2, colour + KING, EMPTY, KING))
+    if check_castle_conditions(colour, QUEEN, gamestate):
+        moves.append(Castle(square, square - 2, colour + KING, EMPTY, QUEEN))
 
     return moves
+
+
+def check_castle_conditions(colour_to_castle: str, side_to_castle: str, gamestate: GameState) -> bool:
+    if colour_to_castle == WHITE:
+        if side_to_castle == KING:
+            if not (KING in gamestate.white_castle_rights):
+                return False
+            if not (gamestate.get_piece_on_square(5) == EMPTY and gamestate.get_piece_on_square(6) == EMPTY):
+                return False
+
+            attacked_squares = generate_attack_map(BLACK, gamestate)
+            if gamestate.white_king_square in attacked_squares or 5 in attacked_squares or 6 in attacked_squares:
+                return False
+
+            return True
+
+        if side_to_castle == QUEEN:
+            if not (QUEEN in gamestate.white_castle_rights):
+                return False
+            if not (all((gamestate.get_piece_on_square(square) == EMPTY) for square in range(1, 4))):
+                return False
+
+            attacked_squares = generate_attack_map(BLACK, gamestate)
+            if gamestate.white_king_square in attacked_squares or any(square in attacked_squares for square in range(1, 4)):
+                return False
+
+            return True
+
+    if colour_to_castle == BLACK:
+        if side_to_castle == KING:
+            if not (KING.lower() in gamestate.black_castle_rights):
+                return False
+            if not (gamestate.get_piece_on_square(61) == EMPTY and gamestate.get_piece_on_square(62) == EMPTY):
+                return False
+
+            attacked_squares = generate_attack_map(WHITE, gamestate)
+            if gamestate.black_king_square in attacked_squares or 61 in attacked_squares or 62 in attacked_squares:
+                return False
+
+            return True
+
+        if side_to_castle == QUEEN:
+            if not (QUEEN.lower() in gamestate.black_castle_rights):
+                return False
+            if not (all((gamestate.get_piece_on_square(square) == EMPTY) for square in range(57, 60))):
+                return False
+
+            attacked_squares = generate_attack_map(WHITE, gamestate)
+            if gamestate.black_king_square in attacked_squares or any(square in attacked_squares for square in range(57, 60)):
+                return False
+
+            return True
 
 
 def get_possible_squares_for_piece(colour: str, square: int, gamestate: GameState) -> list[int]:
@@ -222,36 +266,40 @@ def generate_attack_map(attack_colour: str, gamestate: GameState) -> set[int]:
     attack_squares = set()
 
     for square in range(64):
-        piece = gamestate.get_piece_on_square(square)[1]
-        colour = gamestate.get_piece_on_square(square)[0]
-        if colour == attack_colour:
+        piece_type = gamestate.get_piece_on_square(square)[1]
+        piece_colour = gamestate.get_piece_on_square(square)[0]
+        if piece_colour == attack_colour:
 
-            if piece == PAWN:
-                if colour == WHITE:
+            if piece_type == PAWN:
+                if piece_colour == WHITE:
                     if num_squares_to_edge[square][6] > 0:
                         attack_squares.add(square + 9)
                     if num_squares_to_edge[square][4] > 0:
                         attack_squares.add(square + 7)
-                if colour == BLACK:
+                if piece_colour == BLACK:
                     if num_squares_to_edge[square][7] > 0:
                         attack_squares.add(square - 9)
                     if num_squares_to_edge[square][5] > 0:
                         attack_squares.add(square - 7)
 
-            elif piece == KNIGHT:
-                moves = get_knight_moves(colour, square, gamestate)
+            elif piece_type == KNIGHT:
+                moves = get_knight_moves(piece_colour, square, gamestate)
                 for move in moves:
                     attack_squares.add(move.target_square)
 
-            elif piece in SLIDING_PIECES:
-                moves = get_sliding_moves(colour, square, gamestate)
+            elif piece_type in SLIDING_PIECES:
+                moves = get_sliding_moves(piece_colour, square, gamestate)
                 for move in moves:
                     attack_squares.add(move.target_square)
 
-            elif piece == KING:
-                moves = get_king_moves(colour, square, gamestate)
-                for move in moves:
-                    attack_squares.add(move.target_square)
+            elif piece_type == KING:
+                for direction_index in range(0, 8):
+                    if num_squares_to_edge[square][direction_index] > 0:
+                        target_square = square + DIRECTION_OFFSETS[direction_index]
+                        attack_squares.add(target_square)
+
+
+
 
     return attack_squares
 
