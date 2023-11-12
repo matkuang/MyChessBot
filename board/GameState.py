@@ -1,4 +1,4 @@
-from board.Move import Move, Castle
+from board.Move import Move, Castle, EnPassant
 from board.BoardUtility import array_index_to_square, square_to_array_index, int_to_file_rank, file_rank_to_int
 from board.BoardUtility import WHITE, BLACK, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, EMPTY
 from board.GameHistory import GameHistory
@@ -20,28 +20,15 @@ class GameState:
     full_move_number: int
 
     def __init__(self, fen: str, game_history: GameHistory):
-        # self.board = [
-        #     ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
-        #     ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
-        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
-        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
-        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
-        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
-        #     ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
-        #     ["wR", "--", "--", "--", "wK", "wB", "wN", "wR"]
-        # ]
-        # self.moves = []
-        # self.move_made = False
-        # self.colour_to_move = WHITE
-        # self.white_king_square = 4
-        # self.black_king_square = 60
-        # self.white_castle_rights = [KING, QUEEN]  # king-side, queen-side
-        # self.black_castle_rights = [KING.lower(), QUEEN.lower()]
-        # self.en_passant_target_square = None
-        # self.half_move_clock = 0
-        # self.full_move_number = 1
-
         self.load_gamestate_from_fen(fen, game_history)
+
+    def __str__(self):
+        string = ""
+        for row in self.board:
+            for col in row:
+                string += col + " "
+            string += "\n"
+        return string
 
     def load_gamestate_from_fen(self, fen: str, game_history: GameHistory):
         colours = (WHITE, BLACK)
@@ -65,10 +52,10 @@ class GameState:
             for character in row_string:
                 if character == KING:
                     self.white_king_square = array_index_to_square((row_counter, col_counter))
-                    print(self.white_king_square)
+
                 if character == KING.lower():
                     self.black_king_square = array_index_to_square((row_counter, col_counter))
-                    print(self.black_king_square)
+
                 if character.isnumeric():
                     for num in range(int(character)):
                         row.append(EMPTY)
@@ -81,15 +68,6 @@ class GameState:
 
             board.append(row)
         self.board = board
-
-
-    def __str__(self):
-        string = ""
-        for row in self.board:
-            for col in row:
-                string += col + " "
-            string += "\n"
-        return string
 
     def generate_fen(self):
         fen_string = ""
@@ -144,22 +122,22 @@ class GameState:
         piece_type = move.piece_moved[1]
         piece_colour = move.piece_moved[0]
 
-        # Updates the game board by moving piece moved
         self.set_piece_on_square(move.start_square, EMPTY)
         self.set_piece_on_square(move.target_square, move.piece_moved)
 
-        # Updates the game board by moving the ROOK if move was castling move
         if piece_type == KING:
             self.update_king_location(piece_colour)
+
             rook_square_king = move.start_square + 3
             rook_square_queen = move.start_square - 4
 
-            if move.target_square - move.start_square == 2:  # king-side castle
-                self.set_piece_on_square(rook_square_king, EMPTY)
-                self.set_piece_on_square(rook_square_king - 2, piece_colour + ROOK)
-            if move.target_square - move.start_square == -2:  # queen-side castle
-                self.set_piece_on_square(rook_square_queen, EMPTY)
-                self.set_piece_on_square(rook_square_queen + 3, piece_colour + ROOK)
+            if isinstance(move, Castle):
+                if move.side_to_castle == KING:
+                    self.set_piece_on_square(rook_square_king, EMPTY)
+                    self.set_piece_on_square(rook_square_king - 2, piece_colour + ROOK)
+                if move.side_to_castle == QUEEN:
+                    self.set_piece_on_square(rook_square_queen, EMPTY)
+                    self.set_piece_on_square(rook_square_queen + 3, piece_colour + ROOK)
 
             self.lose_castle_rights(piece_colour, KING)
             self.lose_castle_rights(piece_colour, QUEEN)
@@ -169,7 +147,6 @@ class GameState:
                 self.lose_castle_rights(piece_colour, QUEEN)
 
         # Losing castling rights accordingly if KING or ROOK is moved from original square
-
         if piece_type == ROOK and ((self.white_castle_rights != []) or (self.black_castle_rights != [])):
             if piece_colour == WHITE:
                 if self.get_piece_on_square(7) == EMPTY:
@@ -182,33 +159,20 @@ class GameState:
                 elif self.get_piece_on_square(56) == EMPTY:
                     self.lose_castle_rights(BLACK, QUEEN)
 
+        if piece_type == PAWN:
+            if abs(move.start_square - move.target_square) == 16:
+                self.set_en_passant_square(move.start_square, move.target_square)
+            if isinstance(move, EnPassant):
+                if piece_colour == WHITE:
+                    self.set_piece_on_square(self.en_passant_target_square - 8, EMPTY)
+                else:
+                    self.set_piece_on_square(self.en_passant_target_square + 8, EMPTY)
+
         self.game_history.save_half_move(move)
         self.switch_turn()
         self.game_history.save_gamestate(self.generate_fen())
 
     def unmake_move(self) -> None:
-        # if not self.game_history.is_empty():
-        #     move = self.moves.pop()
-        #     piece_type = move.piece_moved[1]
-        #     piece_colour = move.piece_moved[0]
-        #     self.set_piece_on_square(move.start_square, move.piece_moved)
-        #     self.set_piece_on_square(move.target_square, move.piece_captured)
-        #
-        #     if isinstance(move, Castle):
-        #         rook_square_king = move.start_square + 3
-        #         rook_square_queen = move.start_square - 4
-        #         if move.side_to_castle == KING:
-        #             self.set_piece_on_square(rook_square_king, piece_colour + ROOK)
-        #             self.set_piece_on_square(rook_square_king - 2, EMPTY)
-        #         else:  # move.side_to_castle == QUEEN
-        #             self.set_piece_on_square(rook_square_queen, piece_colour + ROOK)
-        #             self.set_piece_on_square(rook_square_queen + 3, EMPTY)
-        #
-        #
-        #     if piece_type == KING:
-        #         self.update_king_location(move.piece_moved[0])
-        #
-        #     self.switch_turn()
         if not self.game_history.is_empty():
             self.game_history.pop_last_half_move()  # don't know what to do with this for now
             self.game_history.pop_last_gamestate()  # removes the current gamestate since the one we want is in index -2
@@ -242,6 +206,9 @@ class GameState:
 
     def get_colour_to_move(self):
         return self.colour_to_move
+
+    def set_en_passant_square(self, start_square: int, target_square: int):
+        self.en_passant_target_square = (start_square + target_square) // 2
 
 
 if __name__ == '__main__':

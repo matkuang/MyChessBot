@@ -1,5 +1,5 @@
 from board.GameState import GameState
-from board.Move import Move, Castle
+from board.Move import Move, Castle, EnPassant
 from board.BoardUtility import num_squares_to_edge
 from board.BoardUtility import WHITE, BLACK, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, EMPTY
 from board.BoardUtility import SLIDING_PIECES
@@ -76,6 +76,11 @@ def get_pawn_moves(colour:str, square: int, gamestate: GameState) -> list[Move]:
             if square_has_enemy(colour, square + 7, gamestate):
                 moves.append(Move(square, square + 7, colour + PAWN, gamestate.get_piece_on_square(square + 7)))
 
+        # en passant
+        if gamestate.en_passant_target_square is not None:
+            if square + 9 == gamestate.en_passant_target_square or square + 7 == gamestate.en_passant_target_square:
+                moves.append(EnPassant(square, gamestate.en_passant_target_square, colour + PAWN, BLACK + PAWN))
+
     else:  # colour == BLACK
 
         if square in range(48, 56):
@@ -95,6 +100,10 @@ def get_pawn_moves(colour:str, square: int, gamestate: GameState) -> list[Move]:
         if num_squares_to_edge[square][5] > 0:
             if square_has_enemy(colour, square - 7, gamestate):
                 moves.append(Move(square, square - 7, colour + PAWN, gamestate.get_piece_on_square(square - 7)))
+
+        if gamestate.en_passant_target_square is not None:
+            if square - 9 == gamestate.en_passant_target_square or square - 7 == gamestate.en_passant_target_square:
+                moves.append(EnPassant(square, gamestate.en_passant_target_square, colour + PAWN, WHITE + PAWN))
 
     return moves
 
@@ -297,9 +306,6 @@ def generate_attack_map(attack_colour: str, gamestate: GameState) -> set[int]:
                     if num_squares_to_edge[square][direction_index] > 0:
                         target_square = square + DIRECTION_OFFSETS[direction_index]
                         attack_squares.add(target_square)
-
-
-
 
     return attack_squares
 

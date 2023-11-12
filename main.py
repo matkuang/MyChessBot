@@ -172,15 +172,13 @@ if __name__ == '__main__':
                         piece_moved = selected_piece[0]
                         piece_captured = gamestate.get_piece_on_square(target_square)
 
-                        move = Move(start_square,
-                                    target_square,
-                                    piece_moved,
-                                    piece_captured)
-                        if move in valid_moves:
-                            gamestate.make_move(move)
-                            move_made = True
-                            if move.piece_moved[1] == KING:
-                                gamestate.update_king_location(gamestate.get_colour_to_move())
+                        for valid_move in valid_moves:
+                            if valid_move.start_square == start_square and valid_move.target_square == target_square:
+                                gamestate.make_move(valid_move)
+                                move_made = True
+                                if valid_move.piece_moved[1] == KING:
+                                    gamestate.update_king_location(gamestate.get_colour_to_move())
+                                break
 
                     selected_piece = None
                     drop_position = None

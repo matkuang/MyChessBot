@@ -52,3 +52,8 @@ class Castle(Move):
     def __init__(self, start_square: int, target_square: int, piece_moved: str, piece_captured: str, side_to_castle: str):
         super().__init__(start_square, target_square, piece_moved, piece_captured)
         self.side_to_castle = side_to_castle
+
+
+class EnPassant(Move):
+    def __init__(self, start_square: int, target_square: int, piece_moved: str, piece_captured: str):
+        super().__init__(start_square, target_square, piece_moved, piece_captured)
