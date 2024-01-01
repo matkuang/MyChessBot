@@ -57,3 +57,11 @@ class Castle(Move):
 class EnPassant(Move):
     def __init__(self, start_square: int, target_square: int, piece_moved: str, piece_captured: str):
         super().__init__(start_square, target_square, piece_moved, piece_captured)
+
+
+class PromotePawn(Move):
+    promote_to_piece: str
+
+    def __init__(self, start_square: int, target_square: int, piece_moved: str, piece_captured: str, promote_to_piece: str):
+        super().__init__(start_square, target_square, piece_moved, piece_captured)
+        self.promote_to_piece = promote_to_piece

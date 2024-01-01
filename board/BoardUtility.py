@@ -7,6 +7,8 @@ NORTH, SOUTH, WEST, EAST, NORTHWEST, SOUTHEAST, NORTHEAST, SOUTHWEST = 0, 1, 2, 
 KNIGHT_DIRECTION_OFFSETS = (6, 15, -6, -15, 10, 17, -10, -17)  # WNW NNW ESE SSE ENE NNE WSW SSW
 SLIDING_PIECES = {BISHOP, ROOK, QUEEN}
 
+EDGE_RANK_SQUARES = (0, 1, 2, 3, 4, 5, 6, 7, 56, 57, 58, 59, 60, 61, 62, 63)
+
 int_to_file_rank = {56: "a8", 57: "b8", 58: "c8", 59: "d8", 60: "e8", 61: "f8", 62: "g8", 63: "h8",
                     48: "a7", 49: "b7", 50: "c7", 51: "d7", 52: "e7", 53: "f7", 54: "g7", 55: "h7",
                     40: "a6", 41: "b6", 42: "c6", 43: "d6", 44: "e6", 45: "f6", 46: "g6", 47: "h6",

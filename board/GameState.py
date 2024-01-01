@@ -1,4 +1,4 @@
-from board.Move import Move, Castle, EnPassant
+from board.Move import Move, Castle, EnPassant, PromotePawn
 from board.BoardUtility import array_index_to_square, square_to_array_index, int_to_file_rank, file_rank_to_int
 from board.BoardUtility import WHITE, BLACK, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, EMPTY
 from board.GameHistory import GameHistory
@@ -167,6 +167,9 @@ class GameState:
                     self.set_piece_on_square(self.en_passant_target_square - 8, EMPTY)
                 else:
                     self.set_piece_on_square(self.en_passant_target_square + 8, EMPTY)
+
+            if isinstance(move, PromotePawn):
+                self.set_piece_on_square(move.target_square, move.promote_to_piece)
         else:
             self.en_passant_target_square = None
 
