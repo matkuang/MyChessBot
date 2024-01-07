@@ -87,13 +87,13 @@ def get_pawn_moves(colour: str, square: int, gamestate: GameState) -> list[Move]
                 moves.append(PromotePawn(square, square + 8, colour + PAWN, EMPTY, colour + piece))
 
         # promotion by capture
-        if num_squares_to_edge[square][6] > 0 and square in range(8, 48):
+        if num_squares_to_edge[square][6] > 0 and square + 9 in range(56, 64):
             if square_has_enemy(colour, square + 9, gamestate):
                 enemy_piece = gamestate.get_piece_on_square(square + 9)
                 for piece in (KNIGHT, BISHOP, ROOK, QUEEN):
                     moves.append(PromotePawn(square, square + 9, colour + PAWN, enemy_piece, colour + piece))
 
-        if num_squares_to_edge[square][4] > 0 and square in range(8, 48):
+        if num_squares_to_edge[square][4] > 0 and square + 7 in range(56, 64):
             if square_has_enemy(colour, square + 7, gamestate):
                 enemy_piece = gamestate.get_piece_on_square(square + 7)
                 for piece in (KNIGHT, BISHOP, ROOK, QUEEN):
@@ -129,13 +129,13 @@ def get_pawn_moves(colour: str, square: int, gamestate: GameState) -> list[Move]
                 moves.append(PromotePawn(square, square - 8, colour + PAWN, EMPTY, colour + piece))
 
         # promotion by capture
-        if num_squares_to_edge[square][7] > 0:
+        if num_squares_to_edge[square][7] > 0 and square - 9 in range(0, 8):
             if square_has_enemy(colour, square - 9, gamestate):
                 enemy_piece = gamestate.get_piece_on_square(square - 9)
                 for piece in (KNIGHT, BISHOP, ROOK, QUEEN):
                     moves.append(PromotePawn(square, square - 9, colour + PAWN, enemy_piece, colour + piece))
 
-        if num_squares_to_edge[square][5] > 0:
+        if num_squares_to_edge[square][5] > 0 and square - 7 in range(0, 8):
             if square_has_enemy(colour, square - 7, gamestate):
                 enemy_piece = gamestate.get_piece_on_square(square - 7)
                 for piece in (KNIGHT, BISHOP, ROOK, QUEEN):

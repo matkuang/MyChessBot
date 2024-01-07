@@ -22,6 +22,9 @@ class GameHistory:
     def save_gamestate(self, fen: str) -> None:
         self.gamestates.append(fen)
 
+    def save_repetition_gamestate(self, fen: str) -> None:
+        self.repetition_gamestates.append(fen)
+
     def get_last_half_move(self) -> Move:
         if len(self.moves) > 0:
             return self.moves[-1]

@@ -18,6 +18,9 @@ int_to_file_rank = {56: "a8", 57: "b8", 58: "c8", 59: "d8", 60: "e8", 61: "f8", 
                     8: "a2", 9: "b2", 10: "c2", 11: "d2", 12: "e2", 13: "f2", 14: "g2", 15: "h2",
                     0: "a1", 1: "b1", 2: "c1", 3: "d1", 4: "e1", 5: "f1", 6: "g1", 7: "h1"}
 
+piece_values = {"wP": 100, "wN": 300, "wB": 300, "wR": 500, "wQ": 900,
+                "bP": -100, "bN": -300, "bB": -300, "bR": -500, "bQ": -900}
+
 file_rank_to_int = {int_to_file_rank[num]: num for num in range(64)}
 
 num_squares_to_edge = []
