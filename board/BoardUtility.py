@@ -7,6 +7,8 @@ NORTH, SOUTH, WEST, EAST, NORTHWEST, SOUTHEAST, NORTHEAST, SOUTHWEST = 0, 1, 2, 
 KNIGHT_DIRECTION_OFFSETS = (6, 15, -6, -15, 10, 17, -10, -17)  # WNW NNW ESE SSE ENE NNE WSW SSW
 SLIDING_PIECES = {BISHOP, ROOK, QUEEN}
 
+EDGE_RANK_SQUARES = (0, 1, 2, 3, 4, 5, 6, 7, 56, 57, 58, 59, 60, 61, 62, 63)
+
 int_to_file_rank = {56: "a8", 57: "b8", 58: "c8", 59: "d8", 60: "e8", 61: "f8", 62: "g8", 63: "h8",
                     48: "a7", 49: "b7", 50: "c7", 51: "d7", 52: "e7", 53: "f7", 54: "g7", 55: "h7",
                     40: "a6", 41: "b6", 42: "c6", 43: "d6", 44: "e6", 45: "f6", 46: "g6", 47: "h6",
@@ -15,6 +17,9 @@ int_to_file_rank = {56: "a8", 57: "b8", 58: "c8", 59: "d8", 60: "e8", 61: "f8", 
                     16: "a3", 17: "b3", 18: "c3", 19: "d3", 20: "e3", 21: "f3", 22: "g3", 23: "h3",
                     8: "a2", 9: "b2", 10: "c2", 11: "d2", 12: "e2", 13: "f2", 14: "g2", 15: "h2",
                     0: "a1", 1: "b1", 2: "c1", 3: "d1", 4: "e1", 5: "f1", 6: "g1", 7: "h1"}
+
+piece_values = {"wP": 100, "wN": 300, "wB": 300, "wR": 500, "wQ": 900,
+                "bP": -100, "bN": -300, "bB": -300, "bR": -500, "bQ": -900}
 
 file_rank_to_int = {int_to_file_rank[num]: num for num in range(64)}
 

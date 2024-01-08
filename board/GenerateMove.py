@@ -1,5 +1,5 @@
 from board.GameState import GameState
-from board.Move import Move, Castle, EnPassant
+from board.Move import Move, Castle, EnPassant, PromotePawn
 from board.BoardUtility import num_squares_to_edge
 from board.BoardUtility import WHITE, BLACK, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, EMPTY
 from board.BoardUtility import SLIDING_PIECES
@@ -52,7 +52,7 @@ def square_has_enemy(colour: str, target_square: int, gamestate: GameState) -> b
     return target_piece[0] != colour and target_piece != EMPTY
 
 
-def get_pawn_moves(colour:str, square: int, gamestate: GameState) -> list[Move]:
+def get_pawn_moves(colour: str, square: int, gamestate: GameState) -> list[Move]:
     moves = []
 
     if colour == WHITE:
@@ -63,16 +63,16 @@ def get_pawn_moves(colour:str, square: int, gamestate: GameState) -> list[Move]:
                 moves.append(Move(square, square + 8, colour + PAWN, EMPTY))
                 if gamestate.get_piece_on_square(square + 16) == EMPTY:
                     moves.append(Move(square, square + 16, colour + PAWN, EMPTY))
-        if square in range(16, 56):
+        if square in range(16, 48):
             if gamestate.get_piece_on_square(square + 8) == EMPTY:
                 moves.append(Move(square, square + 8, colour + PAWN, EMPTY))
 
         # pawn capture
-        if num_squares_to_edge[square][6] > 0:
+        if num_squares_to_edge[square][6] > 0 and square in range(8, 48):
             if square_has_enemy(colour, square + 9, gamestate):
                 moves.append(Move(square, square + 9, colour + PAWN, gamestate.get_piece_on_square(square + 9)))
 
-        if num_squares_to_edge[square][4] > 0:
+        if num_squares_to_edge[square][4] > 0 and square in range(8, 48):
             if square_has_enemy(colour, square + 7, gamestate):
                 moves.append(Move(square, square + 7, colour + PAWN, gamestate.get_piece_on_square(square + 7)))
 
@@ -80,6 +80,24 @@ def get_pawn_moves(colour:str, square: int, gamestate: GameState) -> list[Move]:
         if gamestate.en_passant_target_square is not None:
             if square + 9 == gamestate.en_passant_target_square or square + 7 == gamestate.en_passant_target_square:
                 moves.append(EnPassant(square, gamestate.en_passant_target_square, colour + PAWN, BLACK + PAWN))
+
+        # promotion by push
+        if square + 8 in range(56, 64) and gamestate.get_piece_on_square(square + 8) == EMPTY:
+            for piece in (KNIGHT, BISHOP, ROOK, QUEEN):
+                moves.append(PromotePawn(square, square + 8, colour + PAWN, EMPTY, colour + piece))
+
+        # promotion by capture
+        if num_squares_to_edge[square][6] > 0 and square + 9 in range(56, 64):
+            if square_has_enemy(colour, square + 9, gamestate):
+                enemy_piece = gamestate.get_piece_on_square(square + 9)
+                for piece in (KNIGHT, BISHOP, ROOK, QUEEN):
+                    moves.append(PromotePawn(square, square + 9, colour + PAWN, enemy_piece, colour + piece))
+
+        if num_squares_to_edge[square][4] > 0 and square + 7 in range(56, 64):
+            if square_has_enemy(colour, square + 7, gamestate):
+                enemy_piece = gamestate.get_piece_on_square(square + 7)
+                for piece in (KNIGHT, BISHOP, ROOK, QUEEN):
+                    moves.append(PromotePawn(square, square + 7, colour + PAWN, enemy_piece, colour + piece))
 
     else:  # colour == BLACK
 
@@ -89,7 +107,7 @@ def get_pawn_moves(colour:str, square: int, gamestate: GameState) -> list[Move]:
                 if gamestate.get_piece_on_square(square - 16) == EMPTY:
                     moves.append(Move(square, square - 16, colour + PAWN, EMPTY))
 
-        if square in range(8, 48):
+        if square in range(16, 48):
             if gamestate.get_piece_on_square(square - 8) == EMPTY:
                 moves.append(Move(square, square - 8, colour + PAWN, EMPTY))
 
@@ -104,6 +122,24 @@ def get_pawn_moves(colour:str, square: int, gamestate: GameState) -> list[Move]:
         if gamestate.en_passant_target_square is not None:
             if square - 9 == gamestate.en_passant_target_square or square - 7 == gamestate.en_passant_target_square:
                 moves.append(EnPassant(square, gamestate.en_passant_target_square, colour + PAWN, WHITE + PAWN))
+
+        # promotion by push
+        if square - 8 in range(0, 8) and gamestate.get_piece_on_square(square - 8) == EMPTY:
+            for piece in (KNIGHT, BISHOP, ROOK, QUEEN):
+                moves.append(PromotePawn(square, square - 8, colour + PAWN, EMPTY, colour + piece))
+
+        # promotion by capture
+        if num_squares_to_edge[square][7] > 0 and square - 9 in range(0, 8):
+            if square_has_enemy(colour, square - 9, gamestate):
+                enemy_piece = gamestate.get_piece_on_square(square - 9)
+                for piece in (KNIGHT, BISHOP, ROOK, QUEEN):
+                    moves.append(PromotePawn(square, square - 9, colour + PAWN, enemy_piece, colour + piece))
+
+        if num_squares_to_edge[square][5] > 0 and square - 7 in range(0, 8):
+            if square_has_enemy(colour, square - 7, gamestate):
+                enemy_piece = gamestate.get_piece_on_square(square - 7)
+                for piece in (KNIGHT, BISHOP, ROOK, QUEEN):
+                    moves.append(PromotePawn(square, square - 7, colour + PAWN, enemy_piece, colour + piece))
 
     return moves
 

@@ -1,11 +1,14 @@
+import random
+
 import pygame as pg
 from board.GameState import GameState
 from board.GameHistory import GameHistory
 import assets
-from board.Move import Move
+from board.Move import PromotePawn
 from board.GenerateMove import get_valid_moves, get_possible_squares_for_piece, in_check
-from board.BoardUtility import array_index_to_square, square_to_array_index
+from board.BoardUtility import array_index_to_square, square_to_array_index, EDGE_RANK_SQUARES
 from board.BoardUtility import WHITE, BLACK, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, EMPTY
+from board.SearchMove import minimax
 
 colours = [(242, 226, 208), (140, 112, 95)]
 highlight_colours = [(232, 128, 138), (230, 101, 113)]  # light, dark
@@ -19,8 +22,13 @@ images = {}
 def load_images():
 
     pieces = ["bP", "bN", "bB", "bR", "bQ", "bK", "wP", "wN", "wB", "wR", "wQ", "wK"]
+    promotion_pieces = ["bN", "bB", "bR", "bQ", "wN", "wB", "wR", "wQ"]
+
     for piece in pieces:
         images[piece] = pg.transform.smoothscale(pg.image.load(f"assets/{piece}.png"), (100, 100))
+    for piece in promotion_pieces:
+        images["p" + piece] = pg.transform.smoothscale(pg.image.load(f"assets/{piece}.png"), (50, 50))
+
     images["WIN"] = pg.transform.smoothscale(pg.image.load("assets/WIN.png"), (400, 400))
     images["LOSE"] = pg.transform.smoothscale(pg.image.load("assets/LOSE.png"), (400, 400))
     images["DRAW"] = pg.transform.smoothscale(pg.image.load("assets/DRAW.png"), (400, 400))
@@ -54,6 +62,36 @@ def draw_pieces(screen: pg.Surface, gamestate: GameState):
                 screen.blit(images[piece], pg.Rect(coordinates, cell_dimensions))
             col_num += 1
         row_num += 1
+
+
+def draw_promotion_choice(screen: pg.Surface, square: int, colour: str):
+    if colour == WHITE:
+        square_index = square_to_array_index(square)
+        square_coordinates = (square_index[1] * cell_width, square_index[0] * cell_height)
+        quadrant_1, quadrant_2, quadrant_3, quadrant_4 = get_quadrants_coordinates(square_coordinates)
+
+        screen.blit(images["pwQ"], quadrant_1)
+        screen.blit(images["pwR"], quadrant_2)
+        screen.blit(images["pwB"], quadrant_3)
+        screen.blit(images["pwN"], quadrant_4)
+
+    # if colour == BLACK:
+    #     square_index = square_to_array_index(square)
+    #     square_coordinates = (square_index[1] * cell_width, square_index[0] * cell_height)
+    #     quadrant_1, quadrant_2, quadrant_3, quadrant_4 = get_quadrants_coordinates(square_coordinates)
+    #
+    #     screen.blit(images["pbQ"], quadrant_1)
+    #     screen.blit(images["pbR"], quadrant_2)
+    #     screen.blit(images["pbB"], quadrant_3)
+    #     screen.blit(images["pbN"], quadrant_4)
+
+
+def get_quadrants_coordinates(square_coordinates):
+    quadrant_1 = square_coordinates
+    quadrant_2 = (square_coordinates[0] + cell_width // 2, square_coordinates[1])
+    quadrant_3 = (square_coordinates[0], square_coordinates[1] + cell_height // 2)
+    quadrant_4 = (square_coordinates[0] + cell_width // 2, square_coordinates[1] + cell_height // 2)
+    return quadrant_1, quadrant_2, quadrant_3, quadrant_4
 
 
 def get_target_square(screen: pg.Surface, selected_piece: tuple):
@@ -112,20 +150,47 @@ def draw_end_screen(screen: pg.Surface, winning_colour: str | None, gamestate: G
         screen.blit(images["DRAW"], pg.Rect((200, 200), (400, 400)))
 
 
+def pick_promotion_piece():
+    global promotion_choice
+    draw_promotion_choice(screen, valid_move.target_square, gamestate.colour_to_move)
+    pg.display.flip()
+    square_index = square_to_array_index(valid_move.target_square)
+    square_coordinates = (square_index[1] * cell_width, square_index[0] * cell_height)
+    queen_coords, rook_coords, bishop_coords, knight_coords = get_quadrants_coordinates(square_coordinates)
+    queen_square = pg.Rect(queen_coords, (50, 50))
+    rook_square = pg.Rect(rook_coords, (50, 50))
+    bishop_square = pg.Rect(bishop_coords, (50, 50))
+    knight_square = pg.Rect(knight_coords, (50, 50))
+    for event2 in pg.event.get():
+        if queen_square.collidepoint(pg.mouse.get_pos()):
+            selected_choice = QUEEN
+        elif rook_square.collidepoint(pg.mouse.get_pos()):
+            selected_choice = ROOK
+        elif bishop_square.collidepoint(pg.mouse.get_pos()):
+            selected_choice = BISHOP
+        elif knight_square.collidepoint(pg.mouse.get_pos()):
+            selected_choice = KNIGHT
+        else:
+            selected_choice = None
+
+        if event2.type == pg.MOUSEBUTTONDOWN:
+            promotion_choice = selected_choice
+
+
 if __name__ == '__main__':
 
     pg.init()
     screen = pg.display.set_mode((board_width, board_height))
     load_images()
     clock = pg.time.Clock()
-    game_history = GameHistory()
-    gamestate = GameState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", game_history)
+    gamestate = GameState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", GameHistory())
 
     selected_piece = None
     drop_position = None
 
     valid_moves = get_valid_moves(gamestate.colour_to_move, gamestate)
     move_made = False
+    choose_promotion_piece = False
 
     running = True
     while running:
@@ -152,17 +217,32 @@ if __name__ == '__main__':
 
             pg.display.flip()
 
+        elif gamestate.half_move_clock == 50:
+            draw_board(screen, selected_piece)
+            draw_pieces(screen, gamestate)
+            draw_end_screen(screen, None, gamestate)  # draw by 50 move rule
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    running = False
+
+        # write threefold repetition case
+
         else:
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     running = False
 
-                if event.type == pg.MOUSEBUTTONDOWN:
+                if gamestate.colour_to_move == BLACK:
+                    move = minimax(2, gamestate)[1]
+                    gamestate.make_move(move)
+                    move_made = True
+
+                if event.type == pg.MOUSEBUTTONDOWN and gamestate.colour_to_move == WHITE:
                     if selected_piece is None:
                         if in_bounds(pg.mouse.get_pos()):
                             piece, file, rank = get_square_under_mouse(gamestate.board)
-                            if piece != EMPTY and in_bounds(pg.mouse.get_pos()):
+                            if piece != EMPTY and piece[0] != BLACK and in_bounds(pg.mouse.get_pos()):
                                 selected_piece = get_square_under_mouse(gamestate.board)
 
                 if event.type == pg.MOUSEBUTTONUP:
@@ -174,11 +254,24 @@ if __name__ == '__main__':
 
                         for valid_move in valid_moves:
                             if valid_move.start_square == start_square and valid_move.target_square == target_square:
-                                gamestate.make_move(valid_move)
-                                move_made = True
-                                if valid_move.piece_moved[1] == KING:
-                                    gamestate.update_king_location(gamestate.get_colour_to_move())
-                                break
+                                if isinstance(valid_move, PromotePawn):
+                                    promotion_choice = None
+                                    while promotion_choice is None:
+                                        pick_promotion_piece()
+                                    gamestate.make_move(PromotePawn(start_square,
+                                                                    target_square,
+                                                                    valid_move.piece_moved,
+                                                                    valid_move.piece_captured,
+                                                                    gamestate.colour_to_move + promotion_choice))
+                                    move_made = True
+                                    break
+                                else:
+                                    gamestate.make_move(valid_move)
+                                    move_made = True
+                                    if valid_move.piece_moved[1] == KING:
+                                        gamestate.update_king_location(gamestate.get_colour_to_move())
+
+                                    break
 
                     selected_piece = None
                     drop_position = None
